@@ -1,0 +1,79 @@
+db.Student.insertMany([
+  { ROLLNO: 101, SNAME: "Vina", DEPARTMENT: "CE", FEES: 15000, SEM: 3, GENDER: "Female", CITY: "Rajkot" },
+  { ROLLNO: 102, SNAME: "Krisha", DEPARTMENT: "EC", FEES: 8000, SEM: 5, GENDER: "Female", CITY: "Ahmedabad" },
+  { ROLLNO: 103, SNAME: "Priti", DEPARTMENT: "Civil", FEES: 12000, SEM: 7, GENDER: "Female", CITY: "Baroda" },
+  { ROLLNO: 104, SNAME: "Mitul", DEPARTMENT: "CE", FEES: 15000, SEM: 3, GENDER: "Male", CITY: "Rajkot" },
+  { ROLLNO: 105, SNAME: "Keshav", DEPARTMENT: "CE", FEES: 15000, SEM: 3, GENDER: "Male", CITY: "Jamnagar" },
+  { ROLLNO: 106, SNAME: "Zarna", DEPARTMENT: "Civil", FEES: 12000, SEM: 5, GENDER: "Female", CITY: "Ahmedabad" },
+  { ROLLNO: 107, SNAME: "Nima", DEPARTMENT: "EE", FEES: 9000, SEM: 5, GENDER: "Female", CITY: "Rajkot" },
+  { ROLLNO: 108, SNAME: "Dhruv", DEPARTMENT: "Mechanical", FEES: 10000, SEM: 5, GENDER: "Male", CITY: "Rajkot" },
+  { ROLLNO: 109, SNAME: "Krish", DEPARTMENT: "Mechanical", FEES: 10000, SEM: 7, GENDER: "Male", CITY: "Baroda" },
+  { ROLLNO: 110, SNAME: "Zeel", DEPARTMENT: "EE", FEES: 9000, SEM: 3, GENDER: "Female", CITY: "Jamnagar" }
+]);
+
+// 1. Display distinct city
+db.Student.aggregate([{ $group: { _id: "$CITY" } }]);
+
+// 2. Display city-wise count of number of students
+db.Student.aggregate([{ $group: { _id: "$CITY", count: { $sum: 1 } } }]);
+
+// 3. Display sum of fees
+db.Student.aggregate([{ $group: { _id: null, Total_Fees: { $sum: "$FEES" } } }]);
+
+// 4. Display average of fees
+db.Student.aggregate([{ $group: { _id: null, Average_Fees: { $avg: "$FEES" } } }]);
+
+// 5. Display maximum and minimum fees
+db.Student.aggregate([{ $group: { _id: null, Max_Fees: { $max: "$FEES" }, Min_Fees: { $min: "$FEES" } } }]);
+
+// 6. Display city-wise total fees
+db.Student.aggregate([{ $group: { _id: "$CITY", Total_Fees: { $sum: "$FEES" } } }]);
+
+// 7. Display gender-wise maximum fees
+db.Student.aggregate([{ $group: { _id: "$GENDER", Max_Fees: { $max: "$FEES" } } }]);
+
+// 8. Display city-wise maximum and minimum fees
+db.Student.aggregate([{ $group: { _id: "$CITY", Max_Fees: { $max: "$FEES" }, Min_Fees: { $min: "$FEES" } } }]);
+
+// 9. Display count of students in Baroda
+db.Student.aggregate([{ $match: { CITY: "Baroda" } }, { $count: "Students_in_Baroda" }]);
+
+// 10. Display average fees of Rajkot
+db.Student.aggregate([{ $match: { CITY: "Rajkot" } }, { $group: { _id: null, Average_Fees: { $avg: "$FEES" } } }]);
+
+// 11. Count male and female students per department
+db.Student.aggregate([{ $group: { _id: { DEPARTMENT: "$DEPARTMENT", GENDER: "$GENDER" }, count: { $sum: 1 } } }]);
+
+// 12. Total fees collected per department
+db.Student.aggregate([{ $group: { _id: "$DEPARTMENT", Total_Fees: { $sum: "$FEES" } } }]);
+
+// 13. Minimum fees paid by male and female students in each city
+db.Student.aggregate([{ $group: { _id: { CITY: "$CITY", GENDER: "$GENDER" }, Min_Fees: { $min: "$FEES" } } }]);
+
+// 14. Sort students by fees in descending order and return top 5
+db.Student.aggregate([{ $sort: { FEES: -1 } }, { $limit: 5 }]);
+
+// 15. Average fees for cities with more than 1 student
+db.Student.aggregate([{ $group: { _id: "$CITY", Avg_Fees: { $avg: "$FEES" }, count: { $sum: 1 } } }, { $match: { count: { $gt: 1 } } }]);
+
+// 16. Total fees for CE and Mechanical students
+db.Student.aggregate([{ $match: { DEPARTMENT: { $in: ["CE", "Mechanical"] } } }, { $group: { _id: null, Total_Fees: { $sum: "$FEES" } } }]);
+
+// 17. Count male and female students per department (duplicate of #11)
+db.Student.aggregate([
+  { 
+    $group: { 
+      _id: { DEPARTMENT: "$DEPARTMENT", GENDER: "$GENDER" }, 
+      count: { $sum: 1 } 
+    } 
+  }
+]);
+
+// 18. Rajkot students grouped by department, finding average fees
+db.Student.aggregate([{ $match: { CITY: "Rajkot" } }, { $group: { _id: "$DEPARTMENT", Avg_Fees: { $avg: "$FEES" } } }]);
+
+// 19. Group by semester and calculate total and average fees, then sort by total fees
+db.Student.aggregate([{ $group: { _id: "$SEM", Total_Fees: { $sum: "$FEES" }, Avg_Fees: { $avg: "$FEES" } } }, { $sort: { Total_Fees: -1 } }]);
+
+// 20. Find top 3 cities with highest total fees
+db.Student.aggregate([{ $group: { _id: "$CITY", Total_Fees: { $sum: "$FEES" } } }, { $sort: { Total_Fees: -1 } }, { $limit: 3 }]);
